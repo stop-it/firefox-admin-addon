@@ -91,15 +91,29 @@ function handleMainButtonClick() {
  */
 function attachWorker(aWorker) {
 	// Listen for request for close page (tab).
-	aWorker.port.on('closePage', function() {
+	aWorker.port.on('close_page', function() {
 		console.log('Closing tab on request comming from the page self.');
 		aWorker.tab.close();
 	});
 
 	// Database connection is not established yet.
 	if (databaseFile == undefined) {
-		aWorker.port.emit('error', 'database_connection_undefined');
+		aWorker.port.emit('database_undefined');
+		return;
 	}
+
+	Sqlite.openConnection({ path: databaseFile, sharedMemoryCache: false }).then(
+		function onConnection(connection) {
+			// Prepare database table
+			aWorker.port.emit('prepare_data_table');
+			// Load data
+			// TODO ...
+		},
+		function onError(error) {
+			// The connection could not be opened. error is an Error describing what went wrong.
+			aWorker.port.emit('database_connection_failed', error);
+		}
+	);
 
 	// ...
 } // end startListening(aWorker)
