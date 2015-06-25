@@ -18,5 +18,11 @@
 	"permissions": {
 		"private-browsing": true,
 		"multiprocess": true
-	}
+	},
+	"preferences": [{
+		"name": "databaseFile",
+		"title": "Stop-It database",
+		"description": "Select Stop-It SQLite database file.",
+		"type": "file"
+	}]
 }
