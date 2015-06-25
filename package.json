@@ -1,0 +1,22 @@
+{
+	"id": "stopit-admin@stopit.be",
+	"title": "Stop-It Administration Add-on",
+	"name": "stopit-admin",
+	"version": "0.0.1",
+	"description": "Simple add-on for Mozilla Firefox which enables administration of Stop-it database with blocked URLs.",
+	"main": "index.js",
+	"author": {
+		"name": "Ondřej Doněk",
+		"email": "ondrejd@gmail.com",
+		"url": "https://ondrejdonek.blogspot.com/"
+	},
+	"engines": {
+		"firefox": ">=38.0a1"
+	},
+	"license": "MPL-2.0",
+	"homepage": "http://stop-it.be/",
+	"permissions": {
+		"private-browsing": true,
+		"multiprocess": true
+	}
+}
