@@ -9,6 +9,7 @@ var tabs = require('sdk/tabs');
 var ui = require('sdk/ui');
 
 Cu.import('resource://gre/modules/Sqlite.jsm');
+Cu.import('resource://gre/modules/Task.jsm');
 
 // URL to main add-on's page.
 var addonPageUrl = self.data.url('page.html');
@@ -102,18 +103,27 @@ function attachWorker(aWorker) {
 		return;
 	}
 
-	Sqlite.openConnection({ path: databaseFile, sharedMemoryCache: false }).then(
-		function onConnection(connection) {
-			// Prepare database table
-			aWorker.port.emit('prepare_data_table');
-			// Load data
-			// TODO ...
-		},
-		function onError(error) {
-			// The connection could not be opened. error is an Error describing what went wrong.
-			aWorker.port.emit('database_connection_failed', error);
+	Task.spawn(function* loadUrls() {
+		let conn = yield Sqlite.openConnection({path: databaseFile});
+
+		try {
+			let sql = 'SELECT * FROM Urls ORDER BY Id ASC LIMIT 0, 50';
+			let result = yield conn.execute(sql);
+			let rows = [];
+
+			for (let row of result) {
+				rows.push({
+					id: row.getResultByName('Id'),
+					url: row.getResultByName('Url'),
+					updated: row.getResultByName('Updated')
+				});
+			}
+
+			aWorker.port.emit('create_data_table', rows);
+		} finally {
+			yield conn.close();
 		}
-	);
+	});
 
 	// ...
 } // end startListening(aWorker)
