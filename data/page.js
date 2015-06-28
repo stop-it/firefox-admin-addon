@@ -51,12 +51,12 @@ function formatDate(aDate) {
 	var d = new Date(aDate);
 	return d.getDate() + '.' + (d.getMonth() + 1) + ' ' + d.getFullYear() +
 		' ' + d.getHours() + ':' + d.getMinutes();
-}
+} // end formatDate(aDate)
 
 /**
  * Create elements for checkbox that looks like checkboxes from Material Design.
  * @param {String} aId
- * @return {DOMElement}
+ * @returns {DOMElement}
  */
 function createCheckbox(aId) {
 	var div = document.createElement('div');
@@ -85,14 +85,14 @@ function createCheckbox(aId) {
 	div.appendChild(label);
 
 	return div;
-}
+} // end createCheckbox(aId)
 
 /**
  * Create elements for select that looks like selects from Material Design.
  * @param {String} aId
  * @param {String} aCurrentValue
  * @param {Array} aValues
- * @return {DOMElement}
+ * @returns {DOMElement}
  */
 function createSelect(aId, aCurrentValue, aValues) {
 	var div = document.createElement('div');
@@ -109,6 +109,7 @@ function createSelect(aId, aCurrentValue, aValues) {
 	span.classList.add('md-icon');
 	span.classList.add('dp24');
 	span.appendChild(document.createTextNode('keyboard_arrow_down'));
+	span.addEventListener('click', onRowsCountDownIconClick, false);
 	div.appendChild(span);
 
 	var ul = document.createElement('ul');
@@ -117,10 +118,13 @@ function createSelect(aId, aCurrentValue, aValues) {
 		li.appendChild(document.createTextNode(aValues[i]));
 		ul.appendChild(li);
 	}
+	ul.addEventListener('click', onRowsCountMenuItemClick, false);
 	div.appendChild(ul);
 
 	return div;
-}/**
+} // end createSelect(aId, aCurrentValue, aValues)
+
+/**
  * Event handler for `checkAll` checkbox.
  */
 function onCheckAllClick() {
@@ -167,11 +171,27 @@ function onRowsCountMenuItemClick(aEvent) {
 	var cont = document.getElementById('rowsCount');
 
 	if (aEvent.target.nodeName === 'LI') {
-		cont.firstElementChild.value = aEvent.target.innerHTML;
+		var rowsCount = aEvent.target.innerHTML;
+		cont.firstElementChild.value = rowsCount;
+		self.port.emit('dataview_set_rowscount', parseInt(rowsCount));
 	}
 
 	cont.lastElementChild.style.display = 'none';
 } // end onRowsCountMenuItemClick(aEvent)
+
+/**
+ * Event handler for moving data view to previous page.
+ */
+function onPrevPageButtonClick() {
+	self.port.emit('dataview_move_prev');
+} // end onPrevPageButtonClick(aEvent)
+
+/**
+ * Event handler for moving data view to next page.
+ */
+function onNextPageButtonClick() {
+	self.port.emit('dataview_move_next');
+} // end onNextPageButtonClick(aEvent)
 
 // Database file undefined.
 self.port.on('database_undefined', function() {
@@ -204,8 +224,8 @@ self.port.on('database_error', function(error) {
 	);
 });
 
-// This is triggered before data (URLs) will be sent to this page.
-self.port.on('create_data_table', function(data) {
+// Prepare data view.
+self.port.on('prepare_dataview', function() {
 	var table = document.createElement('table');
 	table.setAttribute('id', 'table');
 	table.classList.add('data');
@@ -242,20 +262,11 @@ self.port.on('create_data_table', function(data) {
 	var tbody = document.createElement('tbody');
 	tbody.setAttribute('id', 'dataTableBody');
 
-	for (var i=0; i<data.length; i++) {
-		var row = tbody.insertRow();
-		var cell1 = row.insertCell();
-		cell1.classList.add('check');
-
-		var check = createCheckbox('url_' + data[i].id);
-		cell1.appendChild(check);
-
-		var cell2 = row.insertCell();
-		cell2.appendChild(document.createTextNode(data[i].url));
-
-		var cell3 = row.insertCell();
-		cell3.appendChild(document.createTextNode(formatDate(data[i].updated)));
-	}
+	var row = tbody.insertRow();
+	var cell = row.insertCell();
+	cell.setAttribute('colspan', 3);
+	cell.innerHTML = 'Waiting for data&hellip;';
+	cell.classList.add('message');
 
 	table.appendChild(tbody);
 
@@ -269,24 +280,23 @@ self.port.on('create_data_table', function(data) {
 	tfootSpan1.appendChild(document.createTextNode('Rows per page:'));
 	tfootCell.appendChild(tfootSpan1);
 
-	// TODO Set correct `rowsCount`!
-	var tfootSelect = createSelect('rowsCount', '25', ['25', '50', '100']);
+	//aDataView.count
+	var tfootSelect = createSelect('rowsCount', 25, ['25', '50', '100']);
 	tfootCell.appendChild(tfootSelect);
 
 	var tfootSpan2 = document.createElement('span');
-	tfootSpan2.classList.add('label'); 
-	// TODO Set correct `rowsFrom`! 
-	// TODO Set correct `rowsTo`! 
-	// TODO Set correct `rowsTotal`!
-	tfootSpan2.appendChild(document.createTextNode('1-25 of 37800'));
+	tfootSpan2.setAttribute('id', 'dataViewRangeInfo');
+	tfootSpan2.classList.add('label');
+	var dataViewInfo = '0-0 of 0';
+	tfootSpan2.appendChild(document.createTextNode(dataViewInfo));
 	tfootCell.appendChild(tfootSpan2);
 
 	var tfootSpan3 = document.createElement('span');
 	tfootSpan3.setAttribute('id', 'moveTableToPrevPage');
 	tfootSpan3.classList.add('md-icon');
 	tfootSpan3.classList.add('dp24');
-	tfootSpan3.classList.add('disabled');
 	tfootSpan3.appendChild(document.createTextNode('navigate_before'));
+	tfootSpan3.addEventListener('click', onPrevPageButtonClick, false);
 	tfootCell.appendChild(tfootSpan3);
 
 	var tfootSpan4 = document.createElement('span');
@@ -294,34 +304,76 @@ self.port.on('create_data_table', function(data) {
 	tfootSpan4.classList.add('md-icon');
 	tfootSpan4.classList.add('dp24');
 	tfootSpan4.appendChild(document.createTextNode('navigate_next'));
+	tfootSpan4.addEventListener('click', onNextPageButtonClick, false);
 	tfootCell.appendChild(tfootSpan4);
-
 	table.appendChild(tfoot);
 
 	var pageContent = document.getElementById('content');
 	pageContent.appendChild(table);
 
-	// Attach event listeners
+	// Attach event listeners for checkAll checkbox
 	var checkAllBox = document.getElementById('checkAll').parentElement.lastElementChild.lastElementChild;
 	var checkAllCheck = checkAllBox.previousElementSibling;
+	
 	checkAllBox.addEventListener('click', onCheckAllClick, false);
 	checkAllCheck.addEventListener('click', onCheckAllClick, false);
 
-	var rowsCountCont = document.getElementById('rowsCount');
-	var rowsCountDown = rowsCountCont.firstElementChild.nextElementSibling;
-	var rowsCountMenu = rowsCountCont.lastElementChild;
-	rowsCountDown.addEventListener('click', onRowsCountDownIconClick, false);
-	rowsCountMenu.addEventListener('click', onRowsCountMenuItemClick, false);
+	// Request refresh of dataview
+	self.port.emit('refresh_dataview');
 });
 
-// This is triggered when the page is loaded.
-self.port.on('page_load', function() {
-	console.log('[page.js].onLoad');
+// Refresh data view.
+self.port.on('refresh_dataview', function(aDataView) {
+	var tbody = document.getElementById('dataTableBody');
+	if (tbody == undefined) {
+		console.log('Data view table body is undefined!');
+		return;
+	}
+
+	// Remove all current rows of tbody
+	while (tbody.rows.length) {
+		tbody.deleteRow(0);
+	}
+
+	// Render new tbody rows
+	for (var i=0; i<aDataView.rows.length; i++) {
+		var row = tbody.insertRow();
+		var cell1 = row.insertCell();
+		cell1.classList.add('check');
+
+		var check = createCheckbox('url_' + aDataView.rows[i].id);
+		cell1.appendChild(check);
+
+		var cell2 = row.insertCell();
+		cell2.appendChild(document.createTextNode(aDataView.rows[i].url));
+
+		var cell3 = row.insertCell();
+		cell3.appendChild(document.createTextNode(formatDate(aDataView.rows[i].updated)));
+	}
+
+	// Update table footer
+	document.getElementById('rowsCountInput').value = aDataView.count;
+
+	var dataViewInfo = aDataView.from + '-' + aDataView.to + ' of ' + aDataView.total;
+	document.getElementById('dataViewRangeInfo').innerHTML = dataViewInfo;
+
+	var canMovePrev = (aDataView.from == 0);
+	document.getElementById('moveTableToPrevPage').disabled = canMovePrev;
+
+	var canMoveNext = ((aDataView.to + aDataView.count) >= aDataView.total);
+	document.getElementById('moveTableToNextPage').disabled = canMoveNext;
 });
 
-// This is triggered when the page is going to be unloaded.
-self.port.on('page_onload', function() {
-	console.log('[page.js].onLoad');
+
+
+
+
+
+
+/*
+function onWindowUnload(aEvent) {
+	console.log('[page.js].onWindowUnload()');
+	console.log(aEvent);
 
 	// Detach event listeners (if data table exists)
 	var table = document.getElementById('table');
@@ -330,11 +382,12 @@ self.port.on('page_onload', function() {
 		var checkAllCheck = checkAllBox.previousElementSibling;
 		checkAllBox.removeEventListener('click', onCheckAllClick, false);
 		checkAllCheck.removeEventListener('click', onCheckAllClick, false);
-	
+
 		var rowsCountCont = document.getElementById('rowsCount');
 		var rowsCountDown = rowsCountCont.firstElementChild.nextElementSibling;
 		var rowsCountMenu = rowsCountCont.lastElementChild;
 		rowsCountDown.removeEventListener('click', onRowsCountDownIconClick, false);
 		rowsCountMenu.removeEventListener('click', onRowsCountMenuItemClick, false);
 	}
-});
+} // end onWindowUnload(aEvent)
+*/
