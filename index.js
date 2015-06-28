@@ -107,7 +107,7 @@ function attachWorker(aWorker) {
 		let conn = yield Sqlite.openConnection({path: databaseFile});
 
 		try {
-			let sql = 'SELECT * FROM Urls ORDER BY Id ASC LIMIT 0, 50';
+			let sql = 'SELECT * FROM Urls ORDER BY Id ASC LIMIT 0, 25';
 			let result = yield conn.execute(sql);
 			let rows = [];
 
