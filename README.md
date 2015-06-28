@@ -17,3 +17,11 @@ sqlite> CREATE TABLE Urls (Id INTEGER PRIMARY KEY, Url TEXT NOT NULL UNIQUE, Upd
 sqlite> PRAGMA user_version = 1;
 sqlite> .exit
 ```
+
+## Using add-on
+
+1. Download add-on and install it into the [Mozilla Firefox](https://www.mozilla.org/firefox)
+2. Open Firefox's __Add-ons Manager__ and open __Stop-It__ preferences: ![](https://github.com/stop-it/firefox-admin-addon/blob/master/doc/using-admin-screen1.png)
+3. Select database file: ![](https://github.com/stop-it/firefox-admin-addon/blob/master/doc/using-admin-screen2.png)
+4. After selecting database file should disapper exclamation badge on the add-on's toolbar button and you are ready to use it: ![](https://github.com/stop-it/firefox-admin-addon/blob/master/doc/using-admin-screen3.png)
+ 
