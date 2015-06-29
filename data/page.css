@@ -33,7 +33,7 @@
 }
 
 /**
- * Page styles
+ * Global styles
  */
 html, body {
 	background-color: #FAFAFA;
@@ -46,19 +46,23 @@ html, body {
 	text-rendering: optimizelegibility;
 }
 body { padding-bottom: 30px; }
+b { font-weight: 700; }
 
-header {
-	background-color:  #e91e63;
+/**
+ * Header
+ */
+body > header {
+	background-color:  #E91E63;
 	box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.26);
 	height: 96px;
 	padding: 15px 0px 0px 15px;
 }
-header h1 {
+body > header h1 {
 	background-image: url('icon-64.png');
 	background-position: left center;
 	background-repeat: no-repeat;
 	color: #FFF;
-	font-size: 56px;
+	font-size: 38pt;
 	font-weight: 400;
 	line-height: 1.5;
 	margin: 0px auto;
@@ -66,12 +70,6 @@ header h1 {
 	padding-left: 76px;
 	white-space: nowrap;
 }
-
-div.main {
-	width: 100%;
-}
-
-b { font-weight: 700; }
 
 /**
  * Icons
@@ -112,23 +110,12 @@ b { font-weight: 700; }
 	text-rendering: optimizelegibility;
 	text-transform: none;
 }
-.md-icon.dp48 {
-	font-size: 48px;
-	width: 48px;
-	height: 48px;
-}
-.md-icon.dp24 {
-	font-size: 24px;
-	width: 24px;
-	height: 24px;
-}
-.md-icon.dp18 {
-	font-size: 18px;
-	width: 18px;
-	height: 18px;
-}
+.md-icon.dp48 { font-size: 48px; width: 48px; height: 48px; }
+.md-icon.dp32 { font-size: 32px; width: 32px; height: 32px; }
+.md-icon.dp24 { font-size: 24px; width: 24px; height: 24px; }
+.md-icon.dp18 { font-size: 18px; width: 18px; height: 18px; }
 .md-icon.disabled {
-	opacity: 0.3;
+	color: rgba(0, 0, 0, 0.26) !important;
 }
 
 /**
@@ -143,19 +130,18 @@ b { font-weight: 700; }
 	width: 50%;
 	z-index: 1;
 }
-.dialog header {
-	background-color: #FFFFFF;
+.dialog header, .dialog .content, .dialog footer {
+	padding: 0 48px 0 48px;
 }
 .dialog header h2 {
-	background-color: #FFFFFF;
-	font-size: 46px;
+	font-size: 26pt;
 	font-weight: 400;
 }
 .dialog.errorDialog header {
 	border-bottom: #F44336 6px solid;
 }
-.dialog div.content {
-	background-color: #FFFFFF;
+.dialog.infoDialog header {
+	opacity: 0.54;
 }
 .dialog div.content > p {
 	color: #000000;
@@ -165,19 +151,23 @@ b { font-weight: 700; }
 	padding: 10px 20px 10px 20px;
 }
 .dialog footer {
-	background-color: #FFFFFF;
-	padding: 0px 20px 24px 0px;
+	padding-bottom: 20px;
 	text-align: right;
 }
-.dialog footer button {
-	background-color: #FFFFFF;
+
+/**
+ * Buttons
+ */
+button {
+	background-color: transparent;
 	border: 0px none;
 	color: #2196f3;
 	cursor: pointer;
 	font-size: 23px;
+	padding: 0 0 0 0 !important;
 	text-transform: uppercase;
 }
-.dialog footer button:hover {
+button:hover {
 	text-decoration: underline;
 }
 
@@ -193,21 +183,62 @@ table.data {
 	width: 94%;
 }
 table.data thead tr { height: 56px; }
-table.data th span.label { font-size: 10pt; font-weight: 200; opacity: 0.54; }
+table.data th span.label {
+	font-size: 10pt;
+	font-weight: 200;
+	color: rgba(0, 0, 0, 0.54);
+}
 table.data th, table.data td, table.data th, table.data td { text-align: left; }
-table.data th.check, table.data td.check { width: 66px; padding: 0 0 0 0 !important; }
+table.data th.check, table.data td.check {
+	width: 66px;
+	padding: 0 0 0 0 !important;
+}
 table.data th.control, table.data td.control { width: 66px; }
+table.data th.udpatedCol { width: 300px; }
 table.data tr { background-color: #FFFFFF; height: 48px; }
 table.data tbody tr:hover { background-color: #EEEEEE; }
 table.data tbody td.message {
 	font-size: 23px;
-	opacity: 0.54;
+	color: rgba(0, 0, 0, 0.54);
 	padding: 92px 0 112px 0;
 	text-align: center;
 }
-table.data th, table.data td { border-bottom: 1px solid #e0e0e0; }
+table.data th, table.data td {
+	border-bottom: 1px solid #E0E0E0;
+}
 table.data tfoot td { border-bottom: 0px none; }
-table.data tfoot td span.label { opacity: 0.54; }
+table.data tfoot td span.label {
+	color: rgba(0, 0, 0, 0.54);
+}
+
+table.data thead tr.coloredHeader {
+	background-color: #FCE4EC;
+	height: 64px;
+}
+table.data thead tr.coloredHeader td {
+	padding: 0px 18px 0px 18px !important;
+}
+
+table.data thead tr.coloredHeader .form {
+	height: 64px;
+	width: calc(100% - 120px);
+}
+
+table.data thead tr.coloredHeader .nav {
+	float: right;
+	padding: 16px 0 16px 0;
+	margin: 0 0 0 0;
+	height: 32px;
+	position: relative;
+	text-align: right;
+	top: 0px;
+	right: 0px;
+	width: 120px;
+}
+table.data thead tr.coloredHeader .nav span {
+	color: rgba(0, 0, 0, 0.54);
+	margin: 0 0 0 10px;
+}
 
 /*
 TODO tfoot
@@ -216,7 +247,12 @@ table.data tfoot td div.currentPosition {}
 table.data tfoot td div.movePage {}
 */
 table.data tfoot tr { height: 56px; }
-table.data tfoot td { font-size: 10pt; font-weight: 200; padding: 0px 24px 4px 0px; text-align: right; }
+table.data tfoot td {
+	font-size: 10pt;
+	font-weight: 200;
+	padding: 0px 24px 4px 0px;
+	text-align: right;
+}
 table.data tfoot td .md-icon { position: relative; top: 6px; }
 
 /**
@@ -284,7 +320,7 @@ table.data tfoot td .md-icon { position: relative; top: 6px; }
 	width: 14px;
 	background: #4285F4;
 }
-.checkbox-group input[type=checkbox]:checked ~ label .check {
+.checkbox-group input[type="checkbox"]:checked ~ label .check {
 	opacity: 1;
 	-moz-transform: scale(1) rotate(45deg);
 	transform: scale(1) rotate(45deg);
@@ -299,7 +335,10 @@ table.data tfoot td .md-icon { position: relative; top: 6px; }
 }
 
 /* Correct checkboxes position */
-table.data th .checkbox-group, table.data td .checkbox-group { left: 10px; top: -11px; }
+table.data th .checkbox-group, table.data td .checkbox-group {
+	left: 10px;
+	top: -11px;
+}
 
 /* Correct checkboxes color in hovered tbody rows */
 table.data tbody tr:hover .checkbox-group label .check {
@@ -310,7 +349,6 @@ table.data tbody tr:hover .checkbox-group label .check {
 
 /* TODO Rows with checked checkboxes #F5F5F5 */
 
-
 /**
  * Rows count selector.
  */
@@ -318,7 +356,6 @@ table.data tbody tr:hover .checkbox-group label .check {
 	display: inline-block;
 	margin: 0 0 0 6px;
 	padding: 0 0 0 0;
-	
 }
 .select-group input {
 	-moz-appearance: none;
@@ -329,7 +366,7 @@ table.data tbody tr:hover .checkbox-group label .check {
 	font-size: 10pt;
 	height: 30px;
 	margin: 0 0 0 0;
-	opacity: 0.54;
+	color: rgba(0, 0, 0, 0.54);
 	padding: 0 0 0 0;
 	position: relative !important;
 	text-align: left;
@@ -365,4 +402,106 @@ table.data tbody tr:hover .checkbox-group label .check {
 }
 .select-group ul li:hover {
 	background-color: #EEEEEE;
+}
+
+/**
+ * Popup dialog for new URL
+ */
+#addNewUrlDialog {
+	background-color: #FAFAFA;
+	display: none;
+	left: 0px;
+	margin: 0 0 0 0;
+	position: absolute;
+	z-index: 11;
+}
+#addNewUrlArea > button { height: 64px; }
+#addNewUrlCancelBtn { margin-right: 18px; }
+.input-group { 
+	position: relative;
+	top: 30px;
+	margin-top: 30px; 
+	margin-bottom: 90px;
+}
+.input-group .text-input {
+	background-color: transparent;
+	border: none;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.26);
+	color: rgba(0, 0, 0, 0.26);
+	display: block;
+	font-family: "RobotoDraft", "Roboto", sans-serif;
+	font-size: 16pt;
+	font-weight: 200 !important;
+	margin: 6px 0 6px 0;
+	padding: 6px 0 6px 0;
+	width: 100%;
+}
+.input-group .text-input:focus, 
+.input-group .text-input:required, 
+.input-group .text-input:invalid { 
+	box-shadow: none;
+	outline: none;
+}
+.input-group label {
+	background-color: transparent;
+	color: rgba(0, 0, 0, 0.26);
+	font-size: 12pt;
+	font-weight: normal;
+	left: 0px;
+	pointer-events: none;
+	position: absolute;
+	top: -28px;
+	transition: 0.2s ease all;
+}
+.input-group .bar {
+	display: block;
+	position: relative;
+	top: -5px;
+	width: 100%;
+	z-index: 12;
+}
+.input-group .bar:before, .input-group .bar:after {
+	background: #2196f3;
+	bottom: 0px;
+	content: '';
+	height: 4px; 
+	position: absolute; 
+	transition: 0.2s ease all;
+	width: 0; 
+}
+.input-group .bar:before { left: 50%; }
+.input-group .bar:after { right: 50%; }
+.input-group input:focus ~ .bar:before, 
+.input-group input:focus ~ .bar:after {
+	width: 50%;
+	background: #2196f3; 
+}
+
+
+
+/**
+ * Snackbars (there should be just one snackbar at the moment).
+ */
+div.snackbar {
+	animation-duration: 0.5s;
+	animation-name: snackbarSlideIn;
+	background-color: #323232;
+	border-radius: 2px 2px 2px 2px;
+	bottom: 10px;
+	color: #FFFFFF;
+	height: 48px;
+	min-width: 288px;
+	max-width: 568px;
+	padding: 0 24px 0 24px;
+	position: fixed;
+	right: 10px;
+}
+div.snackbar p {
+	font-size: 14pt;
+	margin: 2px 0 0 0;
+	padding: 14px 0 14px 0;
+}
+@keyframes snackbarSlideIn {
+	from { bottom: -48px; }
+	to { bottom: 10px; }
 }

@@ -125,6 +125,208 @@ function createSelect(aId, aCurrentValue, aValues) {
 } // end createSelect(aId, aCurrentValue, aValues)
 
 /**
+ * Create form for adding new URL.
+ * @return {HTMLElement}
+ */
+function createAddUrlPopupDialog() {
+	var dlg = document.createElement('div');
+	dlg.classList.add('dialog');
+	dlg.classList.add('popupDialog');
+	dlg.setAttribute('id', 'addNewUrlDialog');
+
+	var header = document.createElement('header');
+	var title = document.createElement('h2');
+	title.appendChild(document.createTextNode('Add new URL'));
+	header.appendChild(title);
+	dlg.appendChild(header);
+
+	var content = document.createElement('div');
+	content.classList.add('content');
+
+	var form = document.createElement('form');
+	form.setAttribute('id', 'addNewUrlForm');
+
+	var formDiv = document.createElement('div');
+	formDiv.classList.add('input-group');
+	var input = document.createElement('input');
+	input.classList.add('text-input');
+	input.setAttribute('id', 'newUrlInput');
+	input.setAttribute('placeholder', 'Enter new URL or its part');
+	input.required = true;
+	formDiv.appendChild(input);
+	var inputBar = document.createElement('span');
+	inputBar.classList.add('bar');
+	formDiv.appendChild(inputBar);
+	form.appendChild(formDiv);
+	content.appendChild(form);
+	dlg.appendChild(content);
+
+	var footer = document.createElement('footer');
+	var btnCancel = document.createElement('button');
+	btnCancel.setAttribute('id', 'addNewUrlCancelBtn');
+	btnCancel.appendChild(document.createTextNode('Cancel'));
+	footer.appendChild(btnCancel);
+	var btnSave = document.createElement('button');
+	btnSave.setAttribute('id', 'addNewUrlSaveBtn');
+	btnSave.appendChild(document.createTextNode('Save'));
+	footer.appendChild(btnSave);
+	dlg.appendChild(footer);
+
+	return dlg;
+} // end createAddUrlForm()
+
+/**
+ * Create dataview thead element.
+ * @return {HTMLTableSectionElement}
+ */
+function createDataviewThead(aTable) {
+	var thead = document.createElement('thead');
+
+	var coloredRow = thead.insertRow();
+	coloredRow.classList.add('coloredHeader');
+	var thColoredCell = coloredRow.insertCell();
+	thColoredCell.setAttribute('colspan', '3');
+
+	var thNav = document.createElement('nav');
+	thNav.classList.add('nav');
+
+	var navBtnSearch = document.createElement('span');
+	navBtnSearch.classList.add('md-icon');
+	navBtnSearch.classList.add('dp32');
+	navBtnSearch.setAttribute('id', 'searchUrlBtn');
+	navBtnSearch.setAttribute('title', 'Find URL');
+	navBtnSearch.appendChild(document.createTextNode('search'));
+	thNav.appendChild(navBtnSearch);
+
+	var navBtnDelete = document.createElement('span');
+	navBtnDelete.classList.add('md-icon');
+	navBtnDelete.classList.add('dp32');
+	navBtnDelete.setAttribute('id', 'deleteUrlBtn');
+	navBtnDelete.setAttribute('title', 'Delete selected URL(s)');
+	navBtnDelete.disabled = true;
+	navBtnDelete.appendChild(document.createTextNode('delete'));
+	thNav.appendChild(navBtnDelete);
+
+	thColoredCell.appendChild(thNav);
+
+	var formDiv = document.createElement('div');
+	formDiv.classList.add('form');
+	formDiv.setAttribute('id', 'addNewUrlArea');
+	var btnAdd = document.createElement('button');
+	btnAdd.classList.add('add');
+	btnAdd.setAttribute('id', 'addNewUrlBtn');
+	btnAdd.setAttribute('title', 'Add new URL');
+	btnAdd.appendChild(document.createTextNode('Add'));
+	formDiv.appendChild(btnAdd);
+
+	var addNewUrlDlg = createAddUrlPopupDialog();
+	formDiv.appendChild(addNewUrlDlg);
+
+	thColoredCell.appendChild(formDiv);
+
+	var infoRow = thead.insertRow();
+	var thCol1 = document.createElement('th');
+	thCol1.setAttribute('scope', 'col');
+	thCol1.classList.add('check');
+	var thCol1Check = createCheckbox('checkAll');
+	thCol1.appendChild(thCol1Check);
+	var thCol2 = document.createElement('th');
+	thCol2.setAttribute('scope', 'col');
+	var thCol2Span = document.createElement('span');
+	thCol2Span.classList.add('label');
+	thCol2Span.appendChild(document.createTextNode('URL'));
+	thCol2.appendChild(thCol2Span);
+	var thCol3 = document.createElement('th');
+	thCol3.setAttribute('scope', 'col');
+	thCol3.classList.add('udpatedCol');
+	var thCol3Span = document.createElement('span');
+	thCol3Span.classList.add('label');
+	thCol3Span.appendChild(document.createTextNode('Updated'));
+	thCol3.appendChild(thCol3Span);
+	infoRow.appendChild(thCol1);
+	infoRow.appendChild(thCol2);
+	infoRow.appendChild(thCol3);
+
+	return thead;
+} // end createDataviewThead()
+
+/**
+ * Create dataview tfoot element.
+ * @return {HTMLTableSectionElement}
+ */
+function createDataviewTfoot(aTable) {
+	var tfoot = document.createElement('tfoot');
+	var tfootTr = tfoot.insertRow();
+	var tfootCell = tfootTr.insertCell();
+	tfootCell.setAttribute('colspan', '3');
+
+	var tfootSpan1 = document.createElement('span');
+	tfootSpan1.classList.add('label'); 
+	tfootSpan1.appendChild(document.createTextNode('Rows per page:'));
+	tfootCell.appendChild(tfootSpan1);
+
+	var tfootSelect = createSelect('rowsCount', 25, ['25', '50', '100']);
+	tfootCell.appendChild(tfootSelect);
+
+	var tfootSpan2 = document.createElement('span');
+	tfootSpan2.setAttribute('id', 'dataViewRangeInfo');
+	tfootSpan2.classList.add('label');
+	var dataViewInfo = '0-0 of 0';
+	tfootSpan2.appendChild(document.createTextNode(dataViewInfo));
+	tfootCell.appendChild(tfootSpan2);
+
+	var tfootSpan3 = document.createElement('span');
+	tfootSpan3.setAttribute('id', 'moveTableToPrevPage');
+	tfootSpan3.classList.add('md-icon');
+	tfootSpan3.classList.add('dp24');
+	tfootSpan3.appendChild(document.createTextNode('navigate_before'));
+	tfootSpan3.addEventListener('click', onPrevPageButtonClick, false);
+	tfootCell.appendChild(tfootSpan3);
+
+	var tfootSpan4 = document.createElement('span');
+	tfootSpan4.setAttribute('id', 'moveTableToNextPage');
+	tfootSpan4.classList.add('md-icon');
+	tfootSpan4.classList.add('dp24');
+	tfootSpan4.appendChild(document.createTextNode('navigate_next'));
+	tfootSpan4.addEventListener('click', onNextPageButtonClick, false);
+	tfootCell.appendChild(tfootSpan4);
+
+	return tfoot;
+} // end createDataviewTfoot()
+
+/**
+ * Create dataview table element.
+ * @return {HTMLTableElement}
+ */
+function createDataview() {
+	var table = document.createElement('table');
+	table.setAttribute('id', 'table');
+	table.classList.add('data');
+
+	var thead = createDataviewThead();
+	table.appendChild(thead);
+
+	var tbody = document.createElement('tbody');
+	tbody.setAttribute('id', 'dataTableBody');
+
+	var row = tbody.insertRow();
+	var cell = row.insertCell();
+	cell.setAttribute('colspan', 3);
+	cell.innerHTML = 'Waiting for data&hellip;';
+	cell.classList.add('message');
+
+	table.appendChild(tbody);
+
+	var tfoot = createDataviewTfoot();
+	table.appendChild(tfoot);
+
+	return table;
+} // end createDataview()
+
+// ==========================================================================
+// Below are listeners from events emitted from the add-on main page.
+
+/**
  * Event handler for `checkAll` checkbox.
  */
 function onCheckAllClick() {
@@ -193,6 +395,64 @@ function onNextPageButtonClick() {
 	self.port.emit('dataview_move_next');
 } // end onNextPageButtonClick(aEvent)
 
+/**
+ * Event handler for add new URL button click.
+ */
+function onAddNewUrlBtnClick() {
+	var tbl = document.getElementById('table');
+	var dlg = document.getElementById('addNewUrlDialog');
+	var tblRect = tbl.getBoundingClientRect();
+	var contY = tblRect.top - document.body.getBoundingClientRect().top;
+
+	dlg.style.top = contY + 'px';
+	dlg.style.left = tblRect.left + 'px';
+	dlg.style.display = 'block';
+
+	// ...
+} // end onAddNewUrlBtnClick()
+
+/**
+ * Event handler for canceling adding new URL.
+ */
+function onAddNewUrlCancelBtnClick() {
+	var dlg = document.getElementById('addNewUrlDialog');
+	var input = document.getElementById('newUrlInput');
+	input.value = '';
+	dlg.style.display = 'none';
+} // end onAddNewUrlCancelBtnClick()
+
+/**
+ * Event handler for saving a new URL.
+ */
+function onAddNewUrlSaveBtnClick() {
+	var dlg = document.getElementById('addNewUrlDialog');
+	var input = document.getElementById('newUrlInput');
+	var url = input.value;
+	console.log('TODO Save new URL: ' + url);
+	
+	input.value = '';
+	dlg.style.display = 'none';
+
+	self.port.emit('save_new_url', url);
+} // end onAddNewUrlSaveBtnClick()
+
+// ==========================================================================
+// Below are listeners for events emitted from the main script.
+
+// Print message (create snackbar).
+self.port.on('print_message', function(aMessage) {
+	var div = document.createElement('div');
+	div.classList.add('snackbar');
+
+	var p = document.createElement('p');
+
+	p.appendChild(document.createTextNode(aMessage));
+	div.appendChild(p);
+
+	document.body.appendChild(div);
+	window.setTimeout(function() { document.body.removeChild(div); }, 3500);
+});
+
 // Database file undefined.
 self.port.on('database_undefined', function() {
 	createDialog(
@@ -226,90 +486,19 @@ self.port.on('database_error', function(error) {
 
 // Prepare data view.
 self.port.on('prepare_dataview', function() {
-	var table = document.createElement('table');
-	table.setAttribute('id', 'table');
-	table.classList.add('data');
-
-	var thead = document.createElement('thead');
-	var theadRow = document.createElement('tr');
-
-	var thCol1 = document.createElement('th');
-	thCol1.setAttribute('scope', 'col');
-	thCol1.classList.add('check');
-	var thCol1Check = createCheckbox('checkAll');
-	thCol1.appendChild(thCol1Check);
-
-	var thCol2 = document.createElement('th');
-	thCol2.setAttribute('scope', 'col');
-	var thCol2Span = document.createElement('span');
-	thCol2Span.classList.add('label');
-	thCol2Span.appendChild(document.createTextNode('URL'));
-	thCol2.appendChild(thCol2Span);
-
-	var thCol3 = document.createElement('th');
-	thCol3.setAttribute('scope', 'col');
-	var thCol3Span = document.createElement('span');
-	thCol3Span.classList.add('label');
-	thCol3Span.appendChild(document.createTextNode('Updated'));
-	thCol3.appendChild(thCol3Span);
-
-	theadRow.appendChild(thCol1);
-	theadRow.appendChild(thCol2);
-	theadRow.appendChild(thCol3);
-	thead.appendChild(theadRow);
-	table.appendChild(thead);
-
-	var tbody = document.createElement('tbody');
-	tbody.setAttribute('id', 'dataTableBody');
-
-	var row = tbody.insertRow();
-	var cell = row.insertCell();
-	cell.setAttribute('colspan', 3);
-	cell.innerHTML = 'Waiting for data&hellip;';
-	cell.classList.add('message');
-
-	table.appendChild(tbody);
-
-	var tfoot = document.createElement('tfoot');
-	var tfootTr = tfoot.insertRow();
-	var tfootCell = tfootTr.insertCell();
-	tfootCell.setAttribute('colspan', '3');
-
-	var tfootSpan1 = document.createElement('span');
-	tfootSpan1.classList.add('label'); 
-	tfootSpan1.appendChild(document.createTextNode('Rows per page:'));
-	tfootCell.appendChild(tfootSpan1);
-
-	//aDataView.count
-	var tfootSelect = createSelect('rowsCount', 25, ['25', '50', '100']);
-	tfootCell.appendChild(tfootSelect);
-
-	var tfootSpan2 = document.createElement('span');
-	tfootSpan2.setAttribute('id', 'dataViewRangeInfo');
-	tfootSpan2.classList.add('label');
-	var dataViewInfo = '0-0 of 0';
-	tfootSpan2.appendChild(document.createTextNode(dataViewInfo));
-	tfootCell.appendChild(tfootSpan2);
-
-	var tfootSpan3 = document.createElement('span');
-	tfootSpan3.setAttribute('id', 'moveTableToPrevPage');
-	tfootSpan3.classList.add('md-icon');
-	tfootSpan3.classList.add('dp24');
-	tfootSpan3.appendChild(document.createTextNode('navigate_before'));
-	tfootSpan3.addEventListener('click', onPrevPageButtonClick, false);
-	tfootCell.appendChild(tfootSpan3);
-
-	var tfootSpan4 = document.createElement('span');
-	tfootSpan4.setAttribute('id', 'moveTableToNextPage');
-	tfootSpan4.classList.add('md-icon');
-	tfootSpan4.classList.add('dp24');
-	tfootSpan4.appendChild(document.createTextNode('navigate_next'));
-	tfootSpan4.addEventListener('click', onNextPageButtonClick, false);
-	tfootCell.appendChild(tfootSpan4);
-	table.appendChild(tfoot);
-
+	var table = createDataview();
 	var pageContent = document.getElementById('content');
 	pageContent.appendChild(table);
+
+	// Attach event listeners for add new URL form
+	var addNewUrlBtn = document.getElementById('addNewUrlBtn');
+	addNewUrlBtn.addEventListener('click', onAddNewUrlBtnClick, false);
+
+	var addNewUrlCancelBtn = document.getElementById('addNewUrlCancelBtn');
+	addNewUrlCancelBtn.addEventListener('click', onAddNewUrlCancelBtnClick, false);
+
+	var addNewUrlSaveBtn = document.getElementById('addNewUrlSaveBtn');
+	addNewUrlSaveBtn.addEventListener('click', onAddNewUrlSaveBtnClick, false);
 
 	// Attach event listeners for checkAll checkbox
 	var checkAllBox = document.getElementById('checkAll').parentElement.lastElementChild.lastElementChild;
@@ -378,6 +567,14 @@ function onWindowUnload(aEvent) {
 	// Detach event listeners (if data table exists)
 	var table = document.getElementById('table');
 	if (table !== undefined) {
+		var addNewUrlBtn = document.getElementById('addNewUrlBtn');
+		addNewUrlBtn.removeEventListener('click', onAddNewUrlBtnClick, false);
+	
+		var addNewUrlCancelBtn = document.getElementById('addNewUrlCancelBtn');
+		addNewUrlCancelBtn.removeEventListener('click', onAddNewUrlCancelBtnClick, false);
+		var addNewUrlSaveBtn = document.getElementById('addNewUrlSaveBtn');
+		addNewUrlSaveBtn.removeEventListener('click', onAddNewUrlSaveBtnClick, false);
+
 		var checkAllBox = document.getElementById('checkAll').parentElement.lastElementChild.lastElementChild;
 		var checkAllCheck = checkAllBox.previousElementSibling;
 		checkAllBox.removeEventListener('click', onCheckAllClick, false);

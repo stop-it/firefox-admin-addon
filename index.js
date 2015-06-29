@@ -42,6 +42,24 @@ var dataView = {
 var dataViewInitialized = false;
 
 /**
+ * Return date as a string in RFC3339 format (e.g. 2015-06-25T04:33:21+0200).
+ * @return {String}
+ */
+Date.prototype.formatAsRFC3339 = function formatDateAsRFC3339() {
+	let y = this.getFullYear();
+	let m = this.getMonth() + 1;
+	m =  m < 10 ? '0' + m : m;
+	let d = this.getDate() < 10 ? '0' + this.getDate() : this.getDate();
+	let h = this.getHours() < 10 ? '0' + this.getHours() : this.getHours();
+	let min = this.getMinutes() < 10 ? '0' + this.getMinutes() : this.getMinutes();
+	let s = this.getSeconds() < 10 ? '0' + this.getSeconds() : this.getSeconds();
+	let t = Math.round(this.getTimezoneOffset() / 60);
+	t = (t < 0) ? '+' + (Math.abs(t) < 10 ? '0' + Math.abs(t) : Math.abs(t)) + '00' : '-' + t + '00';
+
+	return y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + s + t;
+}; // end formatDateAsRFC3339()
+
+/**
  * Called when preference with path of database file is changed.
  * @param {String} aPrefName
  */
@@ -98,13 +116,41 @@ function refreshDataView(aWorker) {
 		function () {
 			aWorker.port.emit('refresh_dataview', dataView);
 			dataViewInitialized = true;
-		},
-		function (exception) {
-			console.log('promise.exception');
-			console.log(exception);
 		}
 	);
 } // end refreshDataView(aWorker)
+
+/**
+ * Save new URL.
+ * @param {Worker} aWorker
+ * @param {String} aUrl
+ */
+function saveNewUrl(aWorker, aUrl) {
+	console.log('TODO Save new URL: ' + aUrl);
+	Task.spawn(
+		function* loadUrls() {
+			let conn = yield Sqlite.openConnection({ path: databaseFile });
+
+			try {
+				let result = yield conn.execute(
+					'INSERT INTO Urls (Url, Updated) VALUES (?, ?) ', 
+					[aUrl, (new Date()).formatAsRFC3339()]
+				);
+
+				aWorker.port.emit('print_message', 'New URL added');
+			} catch(e) {
+				aWorker.port.emit('print_message', 'URL already exist');
+			} finally {
+				yield conn.close();
+			}
+		}
+	).then(
+		function () {
+			aWorker.port.emit('refresh_dataview', dataView);
+			dataViewInitialized = true;
+		}
+	);
+} // end saveNewUrl(aUrl)
 
 /**
  * Called when add-on's main page is ready.
@@ -178,6 +224,11 @@ function onAddonPageReady(aTab) {
 			console.log('Can\'t move to next page - dataview is already on the last page!');
 			return;
 		}
+	});
+
+	// Listen for saving new URL
+	worker.port.on('save_new_url', function(aUrl) {
+		saveNewUrl(worker, aUrl);
 	});
 
 	// Database connection is not established yet.
