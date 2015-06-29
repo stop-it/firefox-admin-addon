@@ -190,20 +190,21 @@ function createDataviewThead(aTable) {
 	var thNav = document.createElement('nav');
 	thNav.classList.add('nav');
 
-	var navBtnSearch = document.createElement('span');
+	// TODO Add in next version?
+	/*var navBtnSearch = document.createElement('span');
 	navBtnSearch.classList.add('md-icon');
 	navBtnSearch.classList.add('dp32');
 	navBtnSearch.setAttribute('id', 'searchUrlBtn');
 	navBtnSearch.setAttribute('title', 'Find URL');
 	navBtnSearch.appendChild(document.createTextNode('search'));
-	thNav.appendChild(navBtnSearch);
+	thNav.appendChild(navBtnSearch);*/
 
 	var navBtnDelete = document.createElement('span');
 	navBtnDelete.classList.add('md-icon');
 	navBtnDelete.classList.add('dp32');
+	navBtnDelete.classList.add('disabled');
 	navBtnDelete.setAttribute('id', 'deleteUrlBtn');
 	navBtnDelete.setAttribute('title', 'Delete selected URL(s)');
-	navBtnDelete.disabled = true;
 	navBtnDelete.appendChild(document.createTextNode('delete'));
 	thNav.appendChild(navBtnDelete);
 

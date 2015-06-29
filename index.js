@@ -137,6 +137,7 @@ function saveNewUrl(aWorker, aUrl) {
 					[aUrl, (new Date()).formatAsRFC3339()]
 				);
 
+				dataView.total++;
 				aWorker.port.emit('print_message', 'New URL added');
 			} catch(e) {
 				aWorker.port.emit('print_message', 'URL already exist');
