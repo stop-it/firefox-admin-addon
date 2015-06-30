@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
+ * Hold identifier(s) of URL(s) to delete.
+ * @var {Array}
+ */
+var deleteUrlIds = [];
+
+/**
  * Create dialog.
  * @param {String} aType
  * @param {String} aTitle
@@ -176,6 +182,47 @@ function createAddUrlPopupDialog() {
 } // end createAddUrlForm()
 
 /**
+ * Create dialog for URL(s) removal confirmation dialog.
+ */
+function createDeleteUrlPopupDialog() {
+	var dlg = document.createElement('div');
+	dlg.classList.add('dialog');
+	dlg.classList.add('popupDialog');
+	dlg.setAttribute('id', 'deleteUrlDialog');
+
+	var header = document.createElement('header');
+	var title = document.createElement('h2');
+	title.appendChild(document.createTextNode('Delete selected URL(s)'));
+	header.appendChild(title);
+	dlg.appendChild(header);
+
+	var content = document.createElement('div');
+	content.classList.add('content');
+
+	var p = document.createElement('p');
+	var b = document.createElement('b');
+	b.setAttribute('id', 'deleteUrlCountInfo');
+	p.appendChild(document.createTextNode('Do you really want to delete '));
+	p.appendChild(b);
+	p.appendChild(document.createTextNode(' URLs?'));
+	content.appendChild(p);
+	dlg.appendChild(content);
+
+	var footer = document.createElement('footer');
+	var btnCancel = document.createElement('button');
+	btnCancel.setAttribute('id', 'deleteUrlCancelBtn');
+	btnCancel.appendChild(document.createTextNode('Cancel'));
+	footer.appendChild(btnCancel);
+	var btnSave = document.createElement('button');
+	btnSave.setAttribute('id', 'deleteUrlSubmitBtn');
+	btnSave.appendChild(document.createTextNode('Delete'));
+	footer.appendChild(btnSave);
+	dlg.appendChild(footer);
+
+	return dlg;
+} // end createDeleteUrlPopupDialog()
+
+/**
  * Create dataview thead element.
  * @return {HTMLTableSectionElement}
  */
@@ -202,10 +249,10 @@ function createDataviewThead(aTable) {
 	var navBtnDelete = document.createElement('span');
 	navBtnDelete.classList.add('md-icon');
 	navBtnDelete.classList.add('dp32');
-	navBtnDelete.classList.add('disabled');
 	navBtnDelete.setAttribute('id', 'deleteUrlBtn');
 	navBtnDelete.setAttribute('title', 'Delete selected URL(s)');
 	navBtnDelete.appendChild(document.createTextNode('delete'));
+	navBtnDelete.addEventListener('click', onDeleteUrlBtnClick, false);
 	thNav.appendChild(navBtnDelete);
 
 	thColoredCell.appendChild(thNav);
@@ -222,6 +269,9 @@ function createDataviewThead(aTable) {
 
 	var addNewUrlDlg = createAddUrlPopupDialog();
 	formDiv.appendChild(addNewUrlDlg);
+
+	var deleteUrlDlg = createDeleteUrlPopupDialog();
+	thColoredCell.appendChild(deleteUrlDlg);
 
 	thColoredCell.appendChild(formDiv);
 
@@ -324,6 +374,24 @@ function createDataview() {
 	return table;
 } // end createDataview()
 
+/**
+ * Create new snackbar.
+ * @param {String} aMessage
+ * @todo Solve multiple snackbars problem!
+ */
+function createSnackbar(aMessage) {
+	var div = document.createElement('div');
+	div.classList.add('snackbar');
+
+	var p = document.createElement('p');
+
+	p.appendChild(document.createTextNode(aMessage));
+	div.appendChild(p);
+
+	document.body.appendChild(div);
+	window.setTimeout(function() { document.body.removeChild(div); }, 3500);
+} // end createSnackbar(aMessage)
+
 // ==========================================================================
 // Below are listeners from events emitted from the add-on main page.
 
@@ -400,16 +468,14 @@ function onNextPageButtonClick() {
  * Event handler for add new URL button click.
  */
 function onAddNewUrlBtnClick() {
-	var tbl = document.getElementById('table');
 	var dlg = document.getElementById('addNewUrlDialog');
+	var tbl = document.getElementById('table');
 	var tblRect = tbl.getBoundingClientRect();
 	var contY = tblRect.top - document.body.getBoundingClientRect().top;
 
 	dlg.style.top = contY + 'px';
 	dlg.style.left = tblRect.left + 'px';
 	dlg.style.display = 'block';
-
-	// ...
 } // end onAddNewUrlBtnClick()
 
 /**
@@ -418,6 +484,7 @@ function onAddNewUrlBtnClick() {
 function onAddNewUrlCancelBtnClick() {
 	var dlg = document.getElementById('addNewUrlDialog');
 	var input = document.getElementById('newUrlInput');
+
 	input.value = '';
 	dlg.style.display = 'none';
 } // end onAddNewUrlCancelBtnClick()
@@ -429,7 +496,6 @@ function onAddNewUrlSaveBtnClick() {
 	var dlg = document.getElementById('addNewUrlDialog');
 	var input = document.getElementById('newUrlInput');
 	var url = input.value;
-	console.log('TODO Save new URL: ' + url);
 	
 	input.value = '';
 	dlg.style.display = 'none';
@@ -437,21 +503,84 @@ function onAddNewUrlSaveBtnClick() {
 	self.port.emit('save_new_url', url);
 } // end onAddNewUrlSaveBtnClick()
 
+/**
+ * Event handler for delete URL(s) button.
+ */
+function onDeleteUrlBtnClick() {
+	if (deleteUrlIds.length > 0) {
+		// There is a running removal process...
+		return;
+	}
+
+	// Select all checked checkboxes
+	var inputs = document.getElementsByTagName('input');
+	for (var i=0; i<inputs.length; i++) {
+		var input = inputs[i];
+		if (input.getAttribute('type') == 'checkbox') {
+			if (input.checked === true && input.getAttribute('id') != 'checkAll') {
+				deleteUrlIds.push(input.getAttribute('id').replace('url_', ''));
+			}
+		}
+	}
+
+	// If there are no checked checkboxes show snackbar
+	if (deleteUrlIds.length === 0) {
+		createSnackbar('No URL selected');
+		return;
+	}
+
+	// Set count of URL(s) to delete
+	var info = document.getElementById('deleteUrlCountInfo');
+	info.innerHTML = deleteUrlIds.length.toString();
+
+	// Show removal confirmation dialog
+	var dlg = document.getElementById('deleteUrlDialog');
+	var tbl = document.getElementById('table');
+	var tblRect = tbl.getBoundingClientRect();
+	var contY = tblRect.top - document.body.getBoundingClientRect().top;
+	dlg.style.top = contY + 'px';
+	dlg.style.left = Math.round(tblRect.right) - 600 + 'px';
+	dlg.style.display = 'block';
+} // end onDeleteUrlBtnClick()
+
+/**
+ * Event handler for canceling delete URL(s) dialog.
+ */
+function onDeleteUrlCancelBtnClick() {
+	var dlg = document.getElementById('deleteUrlDialog');
+
+	dlg.style.display = 'none';
+} // end onDeleteUrlCancelBtnClick()
+
+/**
+ * Event handler for submitting delete URL(s) dialog.
+ */
+function onDeleteUrlSubmitBtnClick() {
+	var dlg = document.getElementById('deleteUrlDialog');
+	dlg.style.display = 'none';
+	self.port.emit('delete_urls', deleteUrlIds);
+
+	// Clear cache variable
+	deleteUrlIds = [];
+
+	// Uncheck all inputs
+	var inputs = document.getElementsByTagName('input');
+	for (var i=0; i<inputs.length; i++) {
+		var input = inputs[i];
+		if (input.getAttribute('type') == 'checkbox') {
+			if (input.checked === true) {
+				input.checked = false;
+			}
+		}
+	}
+} // end onDeleteUrlCancelBtnClick()
+
 // ==========================================================================
 // Below are listeners for events emitted from the main script.
 
 // Print message (create snackbar).
 self.port.on('print_message', function(aMessage) {
-	var div = document.createElement('div');
-	div.classList.add('snackbar');
-
-	var p = document.createElement('p');
-
-	p.appendChild(document.createTextNode(aMessage));
-	div.appendChild(p);
-
-	document.body.appendChild(div);
-	window.setTimeout(function() { document.body.removeChild(div); }, 3500);
+	createSnackbar(aMessage);
 });
 
 // Database file undefined.
@@ -500,6 +629,13 @@ self.port.on('prepare_dataview', function() {
 
 	var addNewUrlSaveBtn = document.getElementById('addNewUrlSaveBtn');
 	addNewUrlSaveBtn.addEventListener('click', onAddNewUrlSaveBtnClick, false);
+
+	// Attach event listeners for URL(s) removal confirmation dialog
+	var deleteUrlCancelBtn = document.getElementById('deleteUrlCancelBtn');
+	deleteUrlCancelBtn.addEventListener('click', onDeleteUrlCancelBtnClick, false);
+
+	var deleteUrlSubmitBtn = document.getElementById('deleteUrlSubmitBtn');
+	deleteUrlSubmitBtn.addEventListener('click', onDeleteUrlSubmitBtnClick, false);
 
 	// Attach event listeners for checkAll checkbox
 	var checkAllBox = document.getElementById('checkAll').parentElement.lastElementChild.lastElementChild;
@@ -570,11 +706,17 @@ function onWindowUnload(aEvent) {
 	if (table !== undefined) {
 		var addNewUrlBtn = document.getElementById('addNewUrlBtn');
 		addNewUrlBtn.removeEventListener('click', onAddNewUrlBtnClick, false);
-	
+
 		var addNewUrlCancelBtn = document.getElementById('addNewUrlCancelBtn');
 		addNewUrlCancelBtn.removeEventListener('click', onAddNewUrlCancelBtnClick, false);
 		var addNewUrlSaveBtn = document.getElementById('addNewUrlSaveBtn');
 		addNewUrlSaveBtn.removeEventListener('click', onAddNewUrlSaveBtnClick, false);
+
+		var deleteUrlCancelBtn = document.getElementById('deleteUrlCancelBtn');
+		deleteUrlCancelBtn.removeEventListener('click', onDeleteUrlCancelBtnClick, false);
+
+		var deleteUrlSubmitBtn = document.getElementById('deleteUrlSubmitBtn');
+		deleteUrlSubmitBtn.removeEventListener('click', onDeleteUrlSubmitBtnClick, false);
 
 		var checkAllBox = document.getElementById('checkAll').parentElement.lastElementChild.lastElementChild;
 		var checkAllCheck = checkAllBox.previousElementSibling;

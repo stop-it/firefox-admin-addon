@@ -126,7 +126,6 @@ function refreshDataView(aWorker) {
  * @param {String} aUrl
  */
 function saveNewUrl(aWorker, aUrl) {
-	console.log('TODO Save new URL: ' + aUrl);
 	Task.spawn(
 		function* loadUrls() {
 			let conn = yield Sqlite.openConnection({ path: databaseFile });
@@ -147,11 +146,49 @@ function saveNewUrl(aWorker, aUrl) {
 		}
 	).then(
 		function () {
-			aWorker.port.emit('refresh_dataview', dataView);
-			dataViewInitialized = true;
+			refreshDataView(aWorker);
 		}
 	);
 } // end saveNewUrl(aUrl)
+
+/**
+ * Remove URL(s) with given ID(s) from the database.
+ * @param {Worker} aWorker
+ * @param {Array} aUrlIds
+ */
+function deleteUrl(aWorker, aUrlIds) {
+	let ids = aUrlIds.join(',');
+	Task.spawn(
+		function* loadUrls() {
+			let conn = yield Sqlite.openConnection({ path: databaseFile });
+
+			try {
+				let result = yield conn.execute(
+					'DELETE FROM Urls Where Id IN (' + ids + ')'
+				);
+
+				dataView.total = dataView.total - aUrlIds.length;
+				if (aUrlIds.length > 1) {
+					aWorker.port.emit('print_message', 'URLs were deleted');
+				} else {
+					aWorker.port.emit('print_message', 'URL was deleted');
+				}
+			} catch(e) {
+				if (aUrlIds.length > 1) {
+					aWorker.port.emit('print_message', 'URLs were NOT deleted');
+				} else {
+					aWorker.port.emit('print_message', 'URL was NOT deleted');
+				}
+			} finally {
+				yield conn.close();
+			}
+		}
+	).then(
+		function () {
+			refreshDataView(aWorker);
+		}
+	);
+} // end deleteUrl(aUrlIds)
 
 /**
  * Called when add-on's main page is ready.
@@ -230,6 +267,11 @@ function onAddonPageReady(aTab) {
 	// Listen for saving new URL
 	worker.port.on('save_new_url', function(aUrl) {
 		saveNewUrl(worker, aUrl);
+	});
+
+	// Listen for URLs removal request
+	worker.port.on('delete_urls', function(aUrlIds) {
+		deleteUrl(worker, aUrlIds);
 	});
 
 	// Database connection is not established yet.

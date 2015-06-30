@@ -417,6 +417,10 @@ table.data tbody tr:hover .checkbox-group label .check {
 }
 #addNewUrlArea > button { height: 64px; }
 #addNewUrlCancelBtn { margin-right: 18px; }
+
+/**
+ * New URL input
+ */
 .input-group { 
 	position: relative;
 	top: 30px;
@@ -477,7 +481,21 @@ table.data tbody tr:hover .checkbox-group label .check {
 	background: #2196f3; 
 }
 
-
+/**
+ * Popup dialog for new URL
+ */
+#deleteUrlDialog {
+	background-color: #FAFAFA;
+	display: none;
+	left: 0px;
+	margin: 0 0 0 0;
+	position: absolute;
+	z-index: 11;
+}
+#deleteUrlDialog .content p {
+	padding: 28px 0 28px 0;
+}
+#deleteUrlCancelBtn { margin-right: 18px; }
 
 /**
  * Snackbars (there should be just one snackbar at the moment).
