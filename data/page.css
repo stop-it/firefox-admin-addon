@@ -110,11 +110,11 @@ body > header h1 {
 	text-rendering: optimizelegibility;
 	text-transform: none;
 }
-.md-icon.dp48 { font-size: 48px; width: 48px; height: 48px; }
-.md-icon.dp32 { font-size: 32px; width: 32px; height: 32px; }
-.md-icon.dp24 { font-size: 24px; width: 24px; height: 24px; }
-.md-icon.dp18 { font-size: 18px; width: 18px; height: 18px; }
-.md-icon.disabled {
+md-icon.dp48 { font-size: 48px; width: 48px; height: 48px; }
+md-icon.dp32 { font-size: 32px; width: 32px; height: 32px; }
+md-icon.dp24 { font-size: 24px; width: 24px; height: 24px; }
+md-icon.dp18 { font-size: 18px; width: 18px; height: 18px; }
+md-icon.disabled {
 	color: rgba(0, 0, 0, 0.26) !important;
 }
 
@@ -482,7 +482,7 @@ table.data tbody tr:hover .checkbox-group label .check {
 }
 
 /**
- * Popup dialog for new URL
+ * Popup dialog for deleting selected URL(s).
  */
 #deleteUrlDialog {
 	background-color: #FAFAFA;
