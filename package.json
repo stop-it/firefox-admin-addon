@@ -19,6 +19,9 @@
 		"private-browsing": true,
 		"multiprocess": true
 	},
+	"dependencies": {
+		"material-design-lite": "~1.0.0-3"
+	},
 	"preferences": [{
 		"name": "databaseFile",
 		"title": "Stop-It database",

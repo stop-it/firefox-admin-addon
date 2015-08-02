@@ -12,10 +12,37 @@ Cu.import('resource://gre/modules/Sqlite.jsm');
 Cu.import('resource://gre/modules/Task.jsm');
 
 /**
+ * Used when path to SQLite database is not set.
+ * @const {String}
+ */
+const STATUS_DB_UNDEFINED = {
+	get title() { return 'Database file undefined'; },
+	get message() { return '<b>Stop-It</b> database file is not defined.'; }
+};
+
+/**
+ * Used when opening file with SQLite database failed.
+ * @const {String}
+ */
+const STATUS_DB_CONN_FAILED = {
+	get title() { return 'Database connection failed'; },
+	get message() { return 'Unable to connect <b>Stop-It</b> database.'; }
+};
+
+/**
+ * Used when error occured during executing some SQL command.
+ * @const {String}
+ */
+const STATUS_DB_ERROR = {
+	get title() { return 'Database error'; },
+	get message() { return 'Error occured during using the <b>Stop-It</b> database.'; }
+};
+
+/**
  * URL to main add-on's page.
  * @var {String} addonPageUrl
  */
-var addonPageUrl = self.data.url('page.html');
+const ADDON_PAGE_URL = self.data.url('page.html');
 
 /**
  * Path to SQLite database file.
@@ -28,11 +55,11 @@ var databaseFile = require('sdk/simple-prefs').prefs['databaseFile'];
  * @var {Object} dataView
  */
 var dataView = {
-	count: 25,
-	from : 0,
-	to   : 25,
-	rows : [],
-	total: 0
+	count: 25, // Count of rows to display.
+	from : 0,  // Index from which ara data displayed.
+	to   : 25, // Index to which ara data displayed.
+	rows : [], // Array with data self.
+	total: 0   // Total count of data items (rows).
 };
 
 /**
@@ -64,8 +91,8 @@ Date.prototype.formatAsRFC3339 = function formatDateAsRFC3339() {
  * @param {String} aPrefName
  */
 function onDatabaseFileChange(aPrefName) {
-	console.log('Database file is changed!');
 	databaseFile = require('sdk/simple-prefs').prefs['databaseFile'];
+
 	if (databaseFile != undefined) {
 		MainButton.state('window', {
 			'badge': null,
@@ -114,7 +141,7 @@ function refreshDataView(aWorker) {
 		}
 	).then(
 		function () {
-			aWorker.port.emit('refresh_dataview', dataView);
+			aWorker.port.emit('refresh', dataView);
 			dataViewInitialized = true;
 		}
 	);
@@ -137,9 +164,9 @@ function saveNewUrl(aWorker, aUrl) {
 				);
 
 				dataView.total++;
-				aWorker.port.emit('print_message', 'New URL added');
+				aWorker.port.emit('message', 'New URL added');
 			} catch(e) {
-				aWorker.port.emit('print_message', 'URL already exist');
+				aWorker.port.emit('message', 'URL already exist');
 			} finally {
 				yield conn.close();
 			}
@@ -169,15 +196,15 @@ function deleteUrl(aWorker, aUrlIds) {
 
 				dataView.total = dataView.total - aUrlIds.length;
 				if (aUrlIds.length > 1) {
-					aWorker.port.emit('print_message', 'URLs were deleted');
+					aWorker.port.emit('message', 'URLs were deleted');
 				} else {
-					aWorker.port.emit('print_message', 'URL was deleted');
+					aWorker.port.emit('message', 'URL was deleted');
 				}
 			} catch(e) {
 				if (aUrlIds.length > 1) {
-					aWorker.port.emit('print_message', 'URLs were NOT deleted');
+					aWorker.port.emit('message', 'URLs were NOT deleted');
 				} else {
-					aWorker.port.emit('print_message', 'URL was NOT deleted');
+					aWorker.port.emit('message', 'URL was NOT deleted');
 				}
 			} finally {
 				yield conn.close();
@@ -200,17 +227,17 @@ function onAddonPageReady(aTab) {
 	});
 
 	// Listen for request for close page (tab).
-	worker.port.on('close_page', function() {
+	worker.port.on('close', function() {
 		worker.tab.close();
 	});
 	
 	// Listen for request for refreshing dataview
-	worker.port.on('refresh_dataview', function() {
+	worker.port.on('refresh', function() {
 		refreshDataView(worker);
 	});
 
 	// Listen for changing count of displayed dataview rows.
-	worker.port.on('dataview_set_rowscount', function(aRowsCount) {
+	worker.port.on('set_rows', function(aRowsCount) {
 		// Ensure that this is called after `refreshDataView` was called at least once!
 		if (dataViewInitialized !== true) {
 			console.log('Can\'t change rows count - dataview is not initialized yet!');
@@ -229,7 +256,7 @@ function onAddonPageReady(aTab) {
 	});
 
 	// Listen for request of moving on previous dataview's page.
-	worker.port.on('dataview_move_prev', function() {
+	worker.port.on('move_prev', function() {
 		// Ensure that this is called after `refreshDataView` was called at least once!
 		if (dataViewInitialized !== true) {
 			console.log('Can\'t move to previous page - dataview is not initialized yet!');
@@ -247,7 +274,7 @@ function onAddonPageReady(aTab) {
 	});
 
 	// Listen for request of moving on next dataview's page.
-	worker.port.on('dataview_move_next', function() {
+	worker.port.on('move_next', function() {
 		// Ensure that this is called after `refreshDataView` was called at least once!
 		if (dataViewInitialized !== true) {
 			console.log('Can\'t move to next page - dataview is not initialized yet!');
@@ -265,20 +292,30 @@ function onAddonPageReady(aTab) {
 	});
 
 	// Listen for saving new URL
-	worker.port.on('save_new_url', function(aUrl) {
+	worker.port.on('insert', function(aUrl) {
 		saveNewUrl(worker, aUrl);
 	});
 
 	// Listen for URLs removal request
-	worker.port.on('delete_urls', function(aUrlIds) {
+	worker.port.on('delete', function(aUrlIds) {
 		deleteUrl(worker, aUrlIds);
 	});
 
-	// Database connection is not established yet.
-	if (databaseFile == undefined) {
-		worker.port.emit('database_undefined');
-	} else {
-		worker.port.emit('prepare_dataview', dataView);
+	// Initialize the main content page:
+	// 1) Database file is not set
+	if (databaseFile === undefined || databaseFile === null || databaseFile === '') {
+		worker.port.emit('load', STATUS_DB_UNDEFINED);
+		return;
+	}
+
+	try {
+		// 2) Test connection to database file
+		Sqlite.openConnection({ path: databaseFile });
+		// 3a) Connection is successfull - load normally
+		worker.port.emit('load', null);
+	} catch (e) {
+		// 3b) Connection failed.
+		worker.port.emit('load', STATUS_DB_CONN_FAILED);
 	}
 } // end onAddonPageReady(aTab)
 
@@ -288,7 +325,7 @@ function onAddonPageReady(aTab) {
 function onMainButtonClick() {
 	// Check if page is already opened - if yes bring it to the foreground.
 	for (var i=0; i<tabs.length; i++) {
-		if (tabs[i].url == addonPageUrl) {
+		if (tabs[i].url == ADDON_PAGE_URL) {
 			tabs[i].activate();
 			return;
 		}
@@ -296,7 +333,7 @@ function onMainButtonClick() {
 
 	// Page is not opened yet - open it
 	tabs.open({
-		url: addonPageUrl,
+		url: ADDON_PAGE_URL,
 		onReady: onAddonPageReady
 	});
 } // end onMainButtonClick()
@@ -306,9 +343,9 @@ var MainButton = ui.ActionButton({
 	id: 'stopit-admin-btn',
 	label: 'Stop-It Administration',
 	icon: {
-		16: './icon-16.png',
-		32: './icon-32.png',
-		64: './icon-64.png'
+		16: self.data.url('icon-16.png'),
+		32: self.data.url('icon-32.png'),
+		64: self.data.url('icon-64.png')
 	},
 	onClick: onMainButtonClick
 });
@@ -321,14 +358,3 @@ if (databaseFile == undefined) {
 		'label': 'Stop-It Administration: Database file is not selected!'
 	});
 }
-
-// ========================================================================
-// Generated by JPM:
-
-// a dummy function, to show how tests work.
-// to see how to test this function, look at test/test-index.js
-//function dummy(text, callback) {
-//callback(text);
-//}
-//
-//exports.dummy = dummy;
